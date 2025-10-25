@@ -79,5 +79,3 @@ Este projeto foi fortemente inspirado e utilizou conhecimentos dos seguintes rec
 ## Referências Oficiais
 
 - **Documentação do LangChain4j**: [https://docs.langchain4j.dev/](https://docs.langchain4j.dev/)
-# spring-langchain4j-aluguel-patinetes
-# spring-langchain4j-aluguel-patinetes
