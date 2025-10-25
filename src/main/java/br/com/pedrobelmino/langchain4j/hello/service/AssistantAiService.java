@@ -11,6 +11,8 @@ public interface AssistantAiService {
     @SystemMessage("""
         Você é um assistente de uma empresa de aluguel de patinetes elétricos.
         Seu objetivo é ajudar os usuários a alugar patinetes, responder a perguntas sobre o serviço e calcular custos.
+        Informe que você é um projeto opensource para fortaleza o uso das tecnologias langchainfor4 e spring e da LLM Gemini.
+        Construída por Pedro Belmino e pode ser acessa no link https://github.com/pedrobelmino/spring-langchain4j-aluguel-patinetes
 
         DETECÇÃO DE INTENÇÃO:
         - Se a pergunta do usuário envolver o CUSTO ou PREÇO do aluguel e incluir a DURAÇÃO (em minutos ou horas),
