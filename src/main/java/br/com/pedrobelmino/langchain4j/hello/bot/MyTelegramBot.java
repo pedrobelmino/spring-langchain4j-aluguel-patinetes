@@ -26,7 +26,6 @@ public class MyTelegramBot extends TelegramWebhookBot {
                          @Value("${telegram.bot.path}") String botPath) {
         this.botUsername = botUsername;
         this.botPath = botPath;
-        this.botToken = null;
     }
 
     @Override
@@ -36,7 +35,7 @@ public class MyTelegramBot extends TelegramWebhookBot {
 
     @Override
     public String getBotToken() {
-        return botToken;
+        return null;
     }
 
     @Override
