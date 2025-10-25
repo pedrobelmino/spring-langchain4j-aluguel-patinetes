@@ -6,7 +6,7 @@ Este projeto é um chatbot para Telegram que atua como um assistente de uma empr
 
 A interação do usuário começa no Telegram, passa por um webhook seguro, é processada pelo serviço no Cloud Run que utiliza o Gemini para gerar respostas, e retorna ao usuário.
 
-![Arquitetura da Solução](assets/arquitetura/arquitetura.png)
+![Arquitetura da Solução](arquitetura.png)
 
 ## Tecnologias Utilizadas
 
