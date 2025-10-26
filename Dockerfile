@@ -1,28 +1,33 @@
-# Estágio 1: Build da aplicação com Maven
-FROM maven:3.9-eclipse-temurin-21 AS build
+# Use uma imagem base com uma versão específica do Maven e JDK
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-# Define o diretório de trabalho
+# Crie um diretório de trabalho
 WORKDIR /app
 
-# Copia o pom.xml para baixar as dependências
+# Copie apenas o arquivo pom.xml primeiro para aproveitar o cache de dependências
 COPY pom.xml .
+
+# Baixe todas as dependências. Esta camada só será reconstruída se o pom.xml mudar.
 RUN mvn dependency:go-offline
 
-# Copia o restante do código-fonte e compila o JAR
+# Agora copie o resto do código-fonte
 COPY src ./src
+
+# Compile a aplicação e gere o JAR
 RUN mvn package -DskipTests
 
-# Estágio 2: Criação da imagem final a partir de uma JRE leve
+# --- Estágio Final ---
+# Use uma imagem base leve para a execução
 FROM eclipse-temurin:21-jre-jammy
 
-# Define o diretório de trabalho
+# Crie um diretório de trabalho
 WORKDIR /app
 
-# Copia o JAR compilado do estágio de build
+# Copie o JAR do estágio de build para o estágio final
 COPY --from=build /app/target/*.jar app.jar
 
-# Expõe a porta que a aplicação vai usar (o Cloud Run usa a variável PORT)
+# Exponha a porta que a aplicação usa
 EXPOSE 8080
 
 # Comando para executar a aplicação
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
