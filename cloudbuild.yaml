@@ -1,0 +1,28 @@
+steps:
+  # 1. Puxa a imagem anterior para usar como cache
+  # O '|| exit 0' garante que o passo não falhe se a imagem ainda não existir (primeiro build)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull $_IMAGE_TAG:latest || exit 0']
+
+  # 2. Constrói a nova imagem, usando a imagem anterior como cache
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--tag'
+      - '$_IMAGE_TAG:latest'
+      - '--cache-from'
+      - '$_IMAGE_TAG:latest'
+      - '.'
+
+  # 3. Envia a nova imagem para o Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '$_IMAGE_TAG:latest']
+
+# Define a imagem final que foi construída
+images:
+  - '$_IMAGE_TAG:latest'
+
+# Opções de configuração do build
+options:
+  logging: CLOUD_LOGGING_ONLY

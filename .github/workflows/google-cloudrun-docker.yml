@@ -32,15 +32,12 @@ jobs:
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      - name: Configurar Docker para Artifact Registry
-        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
-
-      - name: Build e Push da imagem Docker
-        id: build
+      - name: Build da imagem com Cache via Cloud Build
         run: |
-          IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
-          # A flag --async diz ao gcloud para não esperar o build terminar, resolvendo o erro de streaming de logs.
-          gcloud builds submit --tag ${IMAGE_TAG} --async .
+          # Define a tag da imagem para ser usada no cloudbuild.yaml
+          export IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME}"
+          # Executa o build usando o arquivo de configuração
+          gcloud builds submit --config cloudbuild.yaml --substitutions=_IMAGE_TAG=$IMAGE_TAG
 
       - name: Deploy no Google Cloud Run
         id: 'deploy'
@@ -48,8 +45,10 @@ jobs:
         with:
           service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.GCP_REGION }}
+          # A imagem agora é referenciada pela tag definida no passo anterior
           image: "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
           env_vars: |
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_SECRET_TOKEN=${{ secrets.TELEGRAM_SECRET_TOKEN }}
+
