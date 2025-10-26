@@ -1,0 +1,58 @@
+# Workflow para build e deploy de uma aplicação Spring Boot no Google Cloud Run
+
+name: Build and Deploy to Cloud Run
+
+# Aciona o workflow em pushes para a branch 'main'
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    # ASSOCIA O JOB AO AMBIENTE 'prd'
+    environment:
+      name: prd
+      # Mostra a URL do deploy na página de ambientes do GitHub
+      url: ${{ steps.deploy.outputs.url }}
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Autenticação com Google Cloud
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Configurar Docker para Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build e Push da imagem Docker
+        run: |
+          IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
+          gcloud builds submit --tag ${IMAGE_TAG} .
+
+      - name: Deploy no Google Cloud Run
+        id: 'deploy' # O ID é usado para referenciar a URL de saída
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          service: ${{ secrets.SERVICE_NAME }}
+          region: ${{ secrets.GCP_REGION }}
+          image: "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
+          env_vars: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            TELEGRAM_SECRET_TOKEN=${{ secrets.TELEGRAM_SECRET_TOKEN }}
+
+      - name: Exibir URL do serviço
+        run: echo "Serviço implantado em ${{ steps.deploy.outputs.url }}"
