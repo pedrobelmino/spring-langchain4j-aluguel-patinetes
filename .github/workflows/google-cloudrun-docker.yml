@@ -40,7 +40,7 @@ jobs:
         run: |
           IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
           # A flag --async diz ao gcloud para não esperar o build terminar, resolvendo o erro de streaming de logs.
-          gcloud builds submit --config cloudbuild.yaml --substitutions=_IMAGE_TAG=$IMAGE_TAG
+          gcloud builds submit --tag ${IMAGE_TAG} --async .
 
       - name: Deploy no Google Cloud Run
         id: 'deploy'
