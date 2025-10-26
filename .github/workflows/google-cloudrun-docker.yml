@@ -16,8 +16,6 @@ jobs:
     # ASSOCIA O JOB AO AMBIENTE 'prd'
     environment:
       name: prd
-      # Mostra a URL do deploy na página de ambientes do GitHub
-      url: ${{ steps.deploy.outputs.url }}
 
     permissions:
       contents: 'read'
@@ -38,12 +36,14 @@ jobs:
         run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
       - name: Build e Push da imagem Docker
+        id: build
         run: |
           IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
-          gcloud builds submit --tag ${IMAGE_TAG} .
+          # A flag --async diz ao gcloud para não esperar o build terminar, resolvendo o erro de streaming de logs.
+          gcloud builds submit --tag ${IMAGE_TAG} --async .
 
       - name: Deploy no Google Cloud Run
-        id: 'deploy' # O ID é usado para referenciar a URL de saída
+        id: 'deploy'
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
           service: ${{ secrets.SERVICE_NAME }}
@@ -53,6 +53,3 @@ jobs:
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_SECRET_TOKEN=${{ secrets.TELEGRAM_SECRET_TOKEN }}
-
-      - name: Exibir URL do serviço
-        run: echo "Serviço implantado em ${{ steps.deploy.outputs.url }}"
