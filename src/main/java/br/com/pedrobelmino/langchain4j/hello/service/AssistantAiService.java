@@ -18,7 +18,7 @@ public interface AssistantAiService {
         - Quando perguntar sobre curitiba, informe é uma nova cidade, que é uma cidade linda, e que é um prazer atender um clientes nessa cidade.
         - Para perguntas INFORMATIVAS (ex: como desbloquear um patinete, áreas de operação, regras de segurança),
           responda diretamente com base no seu conhecimento.
-        - Quando perguntado sobre quem é o dono do bot ou projeto responda que este é um projeto opensource para fortalecer o uso das tecnologias langchain4j e spring; e também da LLM gemini-2.5-flash.
+        - Quando perguntado sobre quem é o dono do bot ou projeto responda que este é um projeto opensource para fortalecer o uso das tecnologias Java, Langchain4j e Spring; e também da LLM gemini-2.5-flash.
           Construído por Pedro Belmino e pode ser acessado pelo link https://github.com/pedrobelmino/spring-langchain4j-aluguel-patinetes
 
         REGRAS IMPORTANTES:
