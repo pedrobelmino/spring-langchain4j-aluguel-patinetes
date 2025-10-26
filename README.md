@@ -21,49 +21,43 @@ Este projeto integra um conjunto de tecnologias modernas para criar uma soluçã
 - **Maven**: Gerenciador de dependências e ferramenta de build do projeto.
 - **Docker**: Utilizado para containerizar a aplicação, garantindo um ambiente de execução consistente e facilitando o deploy.
 - **Google Cloud Run & Artifact Registry**: Plataforma serverless para a execução do contêiner e registro seguro para o armazenamento da imagem Docker.
+- **GitHub Actions**: Utilizado para a automação do processo de CI/CD (Integração e Entrega Contínua).
 
 ## Funcionalidades
 
 - **Integração com Telegram**: Responde a mensagens de usuários diretamente no Telegram através de um webhook.
 - **Segurança**: O endpoint do webhook é protegido usando um token secreto (`X-Telegram-Bot-Api-Secret-Token`) para garantir que apenas o Telegram possa enviar requisições.
 - **Assistente Especializado com IA**: Utiliza o LangChain4j e o Google Gemini para interpretar as mensagens dos usuários e fornecer respostas inteligentes e contextuais.
-- **Gerenciamento de Credenciais**: As credenciais e tokens são gerenciados de forma segura através de variáveis de ambiente no Google Cloud Run, não sendo expostos no código-fonte.
-- **Deploy Automatizado**: Inclui um script (`deploy.sh`) para automatizar o build da imagem Docker, o envio para o Artifact Registry e o deploy no Cloud Run com as configurações de ambiente necessárias.
+- **Gerenciamento de Credenciais**: As credenciais e tokens são gerenciados de forma segura através de secrets no GitHub e injetados como variáveis de ambiente no Google Cloud Run, não sendo expostos no código-fonte.
+- **Deploy Automatizado com GitHub Actions**: O processo de build da imagem Docker, envio para o Artifact Registry e deploy no Cloud Run é totalmente automatizado.
 
 ## Configuração e Deploy
 
-O deploy é feito em poucos passos utilizando o script `deploy.sh`.
+O deploy da aplicação é automatizado com GitHub Actions.
 
-### Passo 1: Configurar o Script `deploy.sh`
+### Passo 1: Configurar os Secrets no GitHub
 
-O arquivo `deploy.sh` contém as credenciais necessárias para a aplicação. **Este arquivo é ignorado pelo Git (`.gitignore`) por segurança.**
+Para que o deploy automatizado funcione, você precisa configurar os seguintes secrets no seu repositório do GitHub (`Settings > Secrets and variables > Actions`):
 
-Abra o arquivo `deploy.sh` e preencha as seguintes variáveis com seus valores reais:
+- `GCP_PROJECT_ID`: O ID do seu projeto no Google Cloud.
+- `GCP_SA_KEY`: A chave da conta de serviço do Google Cloud em formato JSON, codificada em Base64.
+- `GEMINI_API_KEY`: Sua chave de API para o Google Gemini.
+- `TELEGRAM_BOT_TOKEN`: O token do seu bot do Telegram.
+- `TELEGRAM_SECRET_TOKEN`: Um token secreto que você cria para proteger seu webhook.
 
-```sh
-# --- CREDENCIAIS E SEGREDOS ---
-GEMINI_API_KEY="SUA_GEMINI_API_KEY_AQUI"
-TELEGRAM_SECRET_TOKEN="SEU_SECRET_TOKEN_AQUI"
-```
+O workflow de deploy, localizado em `.github/workflows/main.yml`, utilizará esses secrets para autenticar e configurar a aplicação no Google Cloud Run.
 
-### Passo 2: Executar o Deploy
+### Passo 2: Trigger do Deploy
 
-Torne o script executável e rode-o.
-
-```bash
-chmod +x deploy.sh
-./deploy.sh
-```
-
-O script irá construir a imagem, enviá-la para o Artifact Registry e implantar o serviço no Cloud Run. Ao final, ele exibirá a URL do serviço.
+O deploy é acionado automaticamente sempre que um push é feito para a branch `main`. Você pode monitorar o progresso na aba "Actions" do seu repositório.
 
 ### Passo 3: Configurar o Webhook do Telegram
 
-Após o deploy, você precisa informar ao Telegram para onde enviar as mensagens. Use o comando `curl` abaixo, substituindo os placeholders:
+Após o primeiro deploy bem-sucedido, o GitHub Actions exibirá a URL do serviço no Cloud Run. Você precisa informar ao Telegram para onde enviar as mensagens. Use o comando `curl` abaixo, substituindo os placeholders:
 
 ```bash
 curl -F "url=URL_DO_SEU_SERVICO/webhook" \
-     -F "secret_token=SEU_SECRET_TOKEN_AQUI" \
+     -F "secret_token=SEU_SECRET_TOKEN_CONFIGURADO_NO_GITHUB" \
      https://api.telegram.org/botSEU_TOKEN_DO_BOT_AQUI/setWebhook
 ```
 
