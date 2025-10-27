@@ -1,4 +1,3 @@
-
 package br.com.pedrobelmino.langchain4j.hello.bot;
 
 import br.com.pedrobelmino.langchain4j.hello.service.AssistantAiService;
@@ -9,7 +8,6 @@ import dev.langchain4j.model.googleai.GoogleAiGeminiChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
@@ -23,11 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class MyTelegramBot extends TelegramWebhookBot {
 
-    private String botUsername;
-    private String botPath;
-
-    @Autowired
-    private GoogleAiGeminiChatModel model;
+    private final String botUsername;
+    private final String botPath;
 
     @Autowired
     private AssistantTools assistantTools;
@@ -49,10 +44,6 @@ public class MyTelegramBot extends TelegramWebhookBot {
         return botUsername;
     }
 
-    @Override
-    public String getBotToken() {
-        return null;
-    }
 
     @Override
     public String getBotPath() {
@@ -62,8 +53,8 @@ public class MyTelegramBot extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
-             String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
+            String messageText = update.getMessage().getText();
+            long chatId = update.getMessage().getChat().getId();
 
             ChatMemory chatMemory = memories.computeIfAbsent(chatId, id -> MessageWindowChatMemory.withMaxMessages(10));
 
