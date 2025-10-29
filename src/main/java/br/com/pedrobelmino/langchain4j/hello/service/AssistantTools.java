@@ -48,7 +48,7 @@ public class AssistantTools {
             return String.format("Um código de confirmação foi enviado para %s. Por favor, verifique sua caixa de entrada.", email);
         } catch (Exception e) {
             // Log do erro seria ideal aqui
-            return String.format("Desculpe, não foi possível enviar o e-mail de confirmação para %s. Por favor, tente novamente mais tarde.", email);
+            return String.format("Desculpe, não foi possível enviar o e-mail de confirmação para %s. Por favor, tente novamente mais tarde. Devido a %s", email, e.getMessage());
         }
     }
 
