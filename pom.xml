@@ -28,6 +28,12 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.sendgrid</groupId>
+            <artifactId>sendgrid-java</artifactId>
+            <version>4.10.0</version>
+        </dependency>
+
         <!-- Test runner -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

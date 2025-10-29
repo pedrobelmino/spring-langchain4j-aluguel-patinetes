@@ -1,14 +1,23 @@
 package br.com.pedrobelmino.langchain4j.hello.service;
 
 import dev.langchain4j.agent.tool.Tool;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Component
 public class AssistantTools {
+
+    @Autowired
+    private EmailService emailService;
+
+    // Mapa para armazenar códigos de confirmação em memória
+    private final Map<String, String> confirmationCodes = new ConcurrentHashMap<>();
 
     // Record para armazenar os detalhes de preço de cada cidade
     private record CityPrice(double unlockFee, double pricePerMinute) {}
@@ -24,6 +33,37 @@ public class AssistantTools {
             "campina grande", new CityPrice(2.20, 0.55),
             "santa cruz do sul", new CityPrice(2.20, 0.55)
     );
+
+    @Tool("Envia um e-mail de confirmação para o endereço de e-mail fornecido.")
+    public String sendConfirmationEmail(String email) {
+        // Gera um código de 6 dígitos aleatório
+        String confirmationCode = String.format("%06d", new Random().nextInt(999999));
+        String subject = "Seu código de confirmação";
+        String body = "Olá! Seu código de confirmação é: " + confirmationCode;
+
+        try {
+            emailService.sendEmail(email, subject, body);
+            // Armazena o código associado ao e-mail
+            confirmationCodes.put(email, confirmationCode);
+            return String.format("Um código de confirmação foi enviado para %s. Por favor, verifique sua caixa de entrada.", email);
+        } catch (Exception e) {
+            // Log do erro seria ideal aqui
+            return String.format("Desculpe, não foi possível enviar o e-mail de confirmação para %s. Por favor, tente novamente mais tarde.", email);
+        }
+    }
+
+    @Tool("Confirma o cadastro do usuário por e-mail com um código de confirmação.")
+    public String confirmRegistration(String email, String confirmationCode) {
+        String storedCode = confirmationCodes.get(email);
+
+        if (storedCode != null && storedCode.equals(confirmationCode)) {
+            // Remove o código após o uso para segurança
+            confirmationCodes.remove(email);
+            return String.format("E-mail %s confirmado com sucesso! Bem-vindo!", email);
+        } else {
+            return "Código de confirmação inválido ou expirado. Por favor, tente novamente.";
+        }
+    }
 
     @Tool("Calcula o custo do aluguel de um patinete elétrico com base na cidade e na duração em minutos.")
     public String calculateScooterRental(String city, int durationInMinutes) {
