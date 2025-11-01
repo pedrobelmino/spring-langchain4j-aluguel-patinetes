@@ -16,6 +16,9 @@ jobs:
     # ASSOCIA O JOB AO AMBIENTE 'prd'
     environment:
       name: prd
+      
+    env:
+      IMAGE_TAG: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
 
     permissions:
       contents: 'read'
@@ -38,9 +41,8 @@ jobs:
       - name: Build e Push da imagem Docker
         id: build
         run: |
-          IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
           # A flag --suppress-logs evita o erro de streaming de logs no GitHub Actions.
-          gcloud builds submit --tag ${IMAGE_TAG} . --suppress-logs
+          gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --suppress-logs
 
       - name: Deploy no Google Cloud Run
         id: 'deploy'
@@ -48,7 +50,7 @@ jobs:
         with:
           service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.GCP_REGION }}
-          image: "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
+          image: ${{ env.IMAGE_TAG }}
           allow_unauthenticated: true
           env_vars: |
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
