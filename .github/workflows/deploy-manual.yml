@@ -37,7 +37,7 @@ jobs:
           service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.GCP_REGION }}
           image: "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:${{ github.event.inputs.image_sha }}"
-          allow_unauthenticated: true
+          flags: '--allow-unauthenticated'
           env_vars: |
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
