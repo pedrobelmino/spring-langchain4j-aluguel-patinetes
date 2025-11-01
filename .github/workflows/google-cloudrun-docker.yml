@@ -42,7 +42,7 @@ jobs:
         id: build
         run: |
           # A flag --suppress-logs evita o erro de streaming de logs no GitHub Actions.
-          gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --suppress-logs
+          gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --async
 
       - name: Deploy no Google Cloud Run
         id: 'deploy'
