@@ -42,10 +42,10 @@ public class AssistantTools {
         String body = "Olá! Seu código de confirmação é: " + confirmationCode;
 
         try {
-//            emailService.sendEmail(email, subject, body);
+            emailService.sendEmail(email, subject, body);
             // Armazena o código associado ao e-mail
             confirmationCodes.put(email, confirmationCode);
-            return String.format("Um código de confirmação foi enviado para %s. Por favor, verifique sua caixa de entrada.", email);
+            return String.format("Um código de confirmação foi enviado para %s. Por favor, verifique sua caixa de entrada e SPAM.", email);
         } catch (Exception e) {
             // Log do erro seria ideal aqui
             return String.format("Desculpe, não foi possível enviar o e-mail de confirmação para %s. Por favor, tente novamente mais tarde. Devido a %s", email, e.getMessage());
