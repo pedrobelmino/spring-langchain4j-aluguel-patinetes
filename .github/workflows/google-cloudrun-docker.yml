@@ -1,28 +1,23 @@
-# Workflow para build e deploy de uma aplicação Spring Boot no Google Cloud Run
+# Workflow para build da imagem Docker e push para o Artifact Registry
 
-name: Build and Deploy to Cloud Run
+name: Build Docker Image
 
-# Aciona o workflow em pushes para a branch 'main'
 on:
   push:
     branches:
       - main
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy
+  build:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
-
-    # ASSOCIA O JOB AO AMBIENTE 'prd'
-    environment:
-      name: prd
-      
-    env:
-      IMAGE_TAG: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
 
     permissions:
       contents: 'read'
       id-token: 'write'
+
+    env:
+      IMAGE_TAG: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:${{ github.sha }}
 
     steps:
       - name: Checkout do código
@@ -40,22 +35,4 @@ jobs:
 
       - name: Build e Push da imagem Docker
         id: build
-        run: |
-          # A flag --suppress-logs evita o erro de streaming de logs no GitHub Actions.
-          gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --async
-
-      - name: Deploy no Google Cloud Run
-        id: 'deploy'
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        with:
-          service: ${{ secrets.SERVICE_NAME }}
-          region: ${{ secrets.GCP_REGION }}
-          image: ${{ env.IMAGE_TAG }}
-          allow_unauthenticated: true
-          env_vars: |
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-            TELEGRAM_SECRET_TOKEN=${{ secrets.TELEGRAM_SECRET_TOKEN }}
-            EMAIL_USER=${{ secrets.EMAIL_USER }}
-            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
-            
+        run: gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --suppress-logs

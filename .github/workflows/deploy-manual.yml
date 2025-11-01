@@ -1,0 +1,46 @@
+# Workflow para deploy manual no Google Cloud Run
+
+name: Manual Deploy to Cloud Run
+
+# Permite o acionamento manual do workflow
+on:
+  workflow_dispatch:
+    inputs:
+      image_sha:
+        description: 'O SHA do commit da imagem a ser implantada'
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
+
+    # ASSOCIA O JOB AO AMBIENTE 'prd'
+    environment:
+      name: prd
+
+    permissions:
+      id-token: 'write'
+
+    steps:
+      - name: Autenticação com Google Cloud
+        id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Deploy no Google Cloud Run
+        id: 'deploy'
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          service: ${{ secrets.SERVICE_NAME }}
+          region: ${{ secrets.GCP_REGION }}
+          image: "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:${{ github.event.inputs.image_sha }}"
+          allow_unauthenticated: true
+          env_vars: |
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+            TELEGRAM_SECRET_TOKEN=${{ secrets.TELEGRAM_SECRET_TOKEN }}
+            EMAIL_USER=${{ secrets.EMAIL_USER }}
+            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
