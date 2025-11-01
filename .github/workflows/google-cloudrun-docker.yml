@@ -40,7 +40,7 @@ jobs:
         run: |
           IMAGE_TAG="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
           # A flag --async diz ao gcloud para não esperar o build terminar, resolvendo o erro de streaming de logs.
-          gcloud builds submit --tag ${IMAGE_TAG} --async .
+          gcloud builds submit --tag ${IMAGE_TAG} .
 
       - name: Deploy no Google Cloud Run
         id: 'deploy'
@@ -49,6 +49,7 @@ jobs:
           service: ${{ secrets.SERVICE_NAME }}
           region: ${{ secrets.GCP_REGION }}
           image: "${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.ARTIFACT_REPO_NAME }}/${{ secrets.IMAGE_NAME }}:latest"
+          allow_unauthenticated: true
           env_vars: |
             GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
