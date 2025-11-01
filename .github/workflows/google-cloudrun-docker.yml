@@ -39,4 +39,4 @@ jobs:
 
       - name: Build e Push da imagem Docker
         id: build
-        run: gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --suppress-logs
+        run: gcloud builds submit --tag ${{ env.IMAGE_TAG }} . --async
