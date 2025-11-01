@@ -12,6 +12,10 @@ jobs:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
 
+    # ASSOCIA O JOB AO AMBIENTE 'prd'
+    environment:
+      name: prd
+
     permissions:
       contents: 'read'
       id-token: 'write'
