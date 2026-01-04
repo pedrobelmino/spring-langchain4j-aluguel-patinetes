@@ -43,4 +43,5 @@ jobs:
             TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             TELEGRAM_SECRET_TOKEN=${{ secrets.TELEGRAM_SECRET_TOKEN }}
             EMAIL_USER=${{ secrets.EMAIL_USER }}
-            SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
+            MAILJET_API_KEY=${{ secrets.MAILJET_API_KEY }}
+            MAILJET_SECRET_KEY=${{ secrets.MAILJET_SECRET_KEY }}

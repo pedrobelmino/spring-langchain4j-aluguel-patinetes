@@ -73,9 +73,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.sendgrid</groupId>
-            <artifactId>sendgrid-java</artifactId>
-            <version>4.10.0</version>
+            <groupId>com.mailjet</groupId>
+            <artifactId>mailjet-client</artifactId>
+            <version>5.2.5</version>
         </dependency>
 
     </dependencies>
