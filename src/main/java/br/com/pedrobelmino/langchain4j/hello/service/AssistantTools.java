@@ -1,5 +1,7 @@
 package br.com.pedrobelmino.langchain4j.hello.service;
 
+import br.com.pedrobelmino.langchain4j.hello.model.RentalData;
+import br.com.pedrobelmino.langchain4j.hello.repository.RentalRepository;
 import dev.langchain4j.agent.tool.Tool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,9 @@ public class AssistantTools {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private RentalRepository rentalRepository;
 
     // Mapa para armazenar códigos de confirmação em memória
     private final Map<String, String> confirmationCodes = new ConcurrentHashMap<>();
@@ -91,6 +96,17 @@ public class AssistantTools {
                             availableCities
                     );
                 });
+    }
+
+    @Tool("Salva os dados do aluguel (nome, email, cidade e duração) no banco de dados.")
+    public String saveRentalData(String name, String email, String city, int durationInMinutes) {
+        try {
+            RentalData rentalData = new RentalData(name, email, city, durationInMinutes);
+            rentalRepository.save(rentalData).block();
+            return "Dados do aluguel salvos com sucesso!";
+        } catch (Exception e) {
+            return "Erro ao salvar os dados do aluguel: " + e.getMessage();
+        }
     }
 
     private String capitalize(String str) {
