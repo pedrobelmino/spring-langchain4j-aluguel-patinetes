@@ -71,11 +71,13 @@ public class AssistantTools {
     }
 
     @Tool("Calcula o custo do aluguel de um patinete elétrico com base na cidade e na duração em minutos.")
-    public String calculateScooterRental(String city, int durationInMinutes) {
+    public String calculateScooterRental(String city, int durationInMinutes, String name, String email) {
         String normalizedCity = city.toLowerCase().trim();
         return Optional.ofNullable(PRICE_TABLE.get(normalizedCity))
                 .map(price -> {
                     double totalCost = price.unlockFee() + (durationInMinutes * price.pricePerMinute());
+                    RentalData rentalData = new RentalData(name, email, city, durationInMinutes);
+                    rentalRepository.save(rentalData).block();
                     return String.format(
                             "Simulação para %s: Alugar um patinete por %d minutos custa R$ %.2f. (Taxa de desbloqueio de R$ %.2f + %d min a R$ %.2f/min).",
                             capitalize(city),
@@ -98,16 +100,6 @@ public class AssistantTools {
                 });
     }
 
-    @Tool("Salva os dados do aluguel (nome, email, cidade e duração) no banco de dados.")
-    public String saveRentalData(String name, String email, String city, int durationInMinutes) {
-        try {
-            RentalData rentalData = new RentalData(name, email, city, durationInMinutes);
-            rentalRepository.save(rentalData).block();
-            return "Dados do aluguel salvos com sucesso!";
-        } catch (Exception e) {
-            return "Erro ao salvar os dados do aluguel: " + e.getMessage();
-        }
-    }
 
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) {
