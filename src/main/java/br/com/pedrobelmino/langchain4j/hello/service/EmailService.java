@@ -27,6 +27,10 @@ public class EmailService {
         MailjetClient client;
         MailjetRequest request;
         MailjetResponse response;
+        
+        // Apply lowercase to the email
+        to = to.toLowerCase();
+
         client = new MailjetClient(
                 ClientOptions.builder()
                         .apiKey(mailjetApiKey)
