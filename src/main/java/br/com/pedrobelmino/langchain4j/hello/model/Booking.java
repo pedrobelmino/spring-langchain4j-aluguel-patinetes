@@ -1,5 +1,6 @@
 package br.com.pedrobelmino.langchain4j.hello.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Booking {
@@ -15,7 +16,7 @@ public class Booking {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Status status;
-    private double totalCost;
+    private BigDecimal totalCost;
 
     public Booking() {
     }
@@ -27,7 +28,7 @@ public class Booking {
         this.city = city;
         this.startTime = startTime;
         this.status = Status.ACTIVE;
-        this.totalCost = 0.0;
+        this.totalCost = BigDecimal.ZERO;
     }
 
     public String getId() {
@@ -86,11 +87,11 @@ public class Booking {
         this.status = status;
     }
 
-    public double getTotalCost() {
+    public BigDecimal getTotalCost() {
         return totalCost;
     }
 
-    public void setTotalCost(double totalCost) {
+    public void setTotalCost(BigDecimal totalCost) {
         this.totalCost = totalCost;
     }
 
