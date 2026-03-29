@@ -124,6 +124,27 @@ class BookingServiceTest {
     }
 
     @Test
+    void shouldListOnlyActiveBookingsForUser() {
+        bookingService.createBooking("SP-001", "João");
+        bookingService.createBooking("SP-002", "João");
+        Booking toComplete = bookingService.createBooking("RJ-001", "João");
+        bookingService.completeBooking(toComplete.getId());
+
+        List<Booking> active = bookingService.listActiveUserBookings("João");
+        assertEquals(2, active.size());
+        assertTrue(active.stream().allMatch(b -> b.getStatus() == Booking.Status.ACTIVE));
+    }
+
+    @Test
+    void shouldReturnEmptyWhenNoActiveBookings() {
+        Booking booking = bookingService.createBooking("SP-001", "João");
+        bookingService.completeBooking(booking.getId());
+
+        List<Booking> active = bookingService.listActiveUserBookings("João");
+        assertTrue(active.isEmpty());
+    }
+
+    @Test
     void costCalculationShouldUseMinimumOneMinute() {
         Booking booking = bookingService.createBooking("SP-001", "João");
         Booking completed = bookingService.completeBooking(booking.getId());

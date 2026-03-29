@@ -174,6 +174,46 @@ public class AssistantTools {
         return sb.toString();
     }
 
+    @Tool("Lista os aluguéis ativos de um usuário com tempo decorrido e custo acumulado em tempo real.")
+    public String listActiveRentals(String userName) {
+        List<Booking> activeBookings = bookingService.listActiveUserBookings(userName);
+
+        if (activeBookings.isEmpty()) {
+            return String.format("Nenhum aluguel ativo encontrado para o usuário '%s'.", userName);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Seus aluguéis ativos, %s:\n\n", userName));
+
+        for (Booking booking : activeBookings) {
+            long elapsedMinutes = Math.max(1,
+                    ChronoUnit.MINUTES.between(booking.getStartTime(), java.time.LocalDateTime.now()));
+            long hours = elapsedMinutes / 60;
+            long minutes = elapsedMinutes % 60;
+
+            BigDecimal accumulatedCost = pricingConfig.calculateCost(booking.getCity(), elapsedMinutes);
+
+            Optional<Scooter> scooterOpt = scooterService.findById(booking.getScooterId());
+            String model = scooterOpt.map(Scooter::getModel).orElse("N/A");
+
+            sb.append(String.format("• Reserva %s\n", booking.getId()));
+            sb.append(String.format("  Patinete: %s (%s)\n", booking.getScooterId(), model));
+            sb.append(String.format("  Cidade: %s\n", capitalize(booking.getCity())));
+            sb.append(String.format("  Início: %s\n", booking.getStartTime().format(DATE_FORMATTER)));
+
+            if (hours > 0) {
+                sb.append(String.format("  Tempo decorrido: %dh %dmin\n", hours, minutes));
+            } else {
+                sb.append(String.format("  Tempo decorrido: %dmin\n", minutes));
+            }
+
+            sb.append(String.format("  Custo acumulado: R$ %.2f\n\n", accumulatedCost));
+        }
+
+        sb.append(String.format("Total: %d aluguel(is) ativo(s).", activeBookings.size()));
+        return sb.toString();
+    }
+
     @Tool("Lista todas as reservas de um usuário pelo nome.")
     public String listUserBookings(String userName) {
         List<Booking> userBookings = bookingService.listUserBookings(userName);
