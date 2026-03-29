@@ -1,9 +1,11 @@
 package br.com.pedrobelmino.langchain4j.hello.service;
 
+import br.com.pedrobelmino.langchain4j.hello.config.PricingConfig;
 import br.com.pedrobelmino.langchain4j.hello.model.Booking;
 import br.com.pedrobelmino.langchain4j.hello.model.Scooter;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -11,100 +13,87 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
 
     private final Map<String, Booking> bookings = new ConcurrentHashMap<>();
     private final ScooterService scooterService;
+    private final PricingConfig pricingConfig;
 
-    // Tabela de preços por cidade (mesma do AssistantTools)
-    private record CityPrice(double unlockFee, double pricePerMinute) {}
-
-    private static final Map<String, CityPrice> PRICE_TABLE = Map.of(
-            "são paulo", new CityPrice(3.00, 0.75),
-            "rio de janeiro", new CityPrice(3.50, 0.80),
-            "salvador", new CityPrice(2.50, 0.60),
-            "brasília", new CityPrice(2.80, 0.70),
-            "fortaleza", new CityPrice(2.20, 0.55),
-            "curitiba", new CityPrice(2.20, 0.55),
-            "campina grande", new CityPrice(2.20, 0.55),
-            "santa cruz do sul", new CityPrice(2.20, 0.55)
-    );
-
-    public BookingService(ScooterService scooterService) {
+    public BookingService(ScooterService scooterService, PricingConfig pricingConfig) {
         this.scooterService = scooterService;
+        this.pricingConfig = pricingConfig;
     }
 
     public Booking createBooking(String scooterId, String userName) {
-        Optional<Scooter> scooterOpt = scooterService.findById(scooterId);
-        if (scooterOpt.isEmpty()) {
-            return null;
-        }
+        Scooter scooter = scooterService.findById(scooterId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        String.format("Patinete com ID '%s' não encontrado.", scooterId)));
 
-        Scooter scooter = scooterOpt.get();
-        if (scooter.getStatus() != Scooter.Status.AVAILABLE) {
-            return null;
+        if (!scooterService.tryReserve(scooterId)) {
+            throw new IllegalStateException(
+                    String.format("O patinete %s não está disponível no momento. Status atual: %s.",
+                            scooterId, scooter.getStatus()));
         }
 
         String bookingId = "RES-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         Booking booking = new Booking(bookingId, scooterId, userName, scooter.getCity(), LocalDateTime.now());
-
-        scooterService.updateStatus(scooterId, Scooter.Status.IN_USE);
         bookings.put(bookingId, booking);
 
         return booking;
     }
 
     public Booking completeBooking(String bookingId) {
-        Booking booking = bookings.get(bookingId);
-        if (booking == null || booking.getStatus() != Booking.Status.ACTIVE) {
-            return null;
-        }
+        Booking booking = findActiveBooking(bookingId);
 
         booking.setEndTime(LocalDateTime.now());
         booking.setStatus(Booking.Status.COMPLETED);
 
-        long durationMinutes = ChronoUnit.MINUTES.between(booking.getStartTime(), booking.getEndTime());
-        if (durationMinutes < 1) {
-            durationMinutes = 1; // mínimo de 1 minuto
-        }
+        long durationMinutes = Math.max(1,
+                ChronoUnit.MINUTES.between(booking.getStartTime(), booking.getEndTime()));
 
-        String normalizedCity = booking.getCity().toLowerCase().trim();
-        CityPrice price = PRICE_TABLE.get(normalizedCity);
-        if (price != null) {
-            double totalCost = price.unlockFee() + (durationMinutes * price.pricePerMinute());
-            booking.setTotalCost(totalCost);
-        }
+        BigDecimal totalCost = pricingConfig.calculateCost(booking.getCity(), durationMinutes);
+        booking.setTotalCost(totalCost);
 
-        scooterService.updateStatus(booking.getScooterId(), Scooter.Status.AVAILABLE);
+        scooterService.release(booking.getScooterId());
 
         return booking;
     }
 
     public Booking cancelBooking(String bookingId) {
-        Booking booking = bookings.get(bookingId);
-        if (booking == null || booking.getStatus() != Booking.Status.ACTIVE) {
-            return null;
-        }
+        Booking booking = findActiveBooking(bookingId);
 
         booking.setEndTime(LocalDateTime.now());
         booking.setStatus(Booking.Status.CANCELLED);
-        booking.setTotalCost(0.0);
+        booking.setTotalCost(BigDecimal.ZERO);
 
-        scooterService.updateStatus(booking.getScooterId(), Scooter.Status.AVAILABLE);
+        scooterService.release(booking.getScooterId());
 
         return booking;
     }
 
     public Optional<Booking> findById(String bookingId) {
-        return Optional.ofNullable(bookings.get(bookingId));
+        return Optional.ofNullable(bookings.get(bookingId.toUpperCase()));
     }
 
     public List<Booking> listUserBookings(String userName) {
         return bookings.values().stream()
                 .filter(b -> b.getUserName().equalsIgnoreCase(userName))
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    private Booking findActiveBooking(String bookingId) {
+        Booking booking = bookings.get(bookingId.toUpperCase());
+        if (booking == null) {
+            throw new IllegalArgumentException(
+                    String.format("Reserva com ID '%s' não encontrada.", bookingId));
+        }
+        if (booking.getStatus() != Booking.Status.ACTIVE) {
+            throw new IllegalStateException(
+                    String.format("A reserva %s já foi %s.", bookingId,
+                            booking.getStatus() == Booking.Status.COMPLETED ? "finalizada" : "cancelada"));
+        }
+        return booking;
     }
 }
