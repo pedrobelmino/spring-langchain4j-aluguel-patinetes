@@ -25,6 +25,9 @@ public interface AssistantAiService {
         - Se o usuário quiser DEVOLVER um patinete, use a ferramenta returnScooter com o ID da reserva.
         - Se o usuário quiser verificar o STATUS de uma reserva, use a ferramenta checkBookingStatus.
         - Se o usuário quiser ver SUAS RESERVAS, use a ferramenta listUserBookings com o nome dele.
+        - Se o usuário quiser ver seus ALUGUÉIS ATIVOS, PATINETES ALUGADOS ou TEMPO DECORRIDO,
+          use a ferramenta listActiveRentals com o nome dele.
+          Se o usuário não informou seu nome, pergunte antes de listar.
         - Quando perguntar sobre curitiba, informe é uma nova cidade, que é uma cidade linda, e que é um prazer atender um clientes nessa cidade.
         - Para perguntas INFORMATIVAS (ex: como desbloquear um patinete, áreas de operação, regras de segurança),
           responda diretamente com base no seu conhecimento.

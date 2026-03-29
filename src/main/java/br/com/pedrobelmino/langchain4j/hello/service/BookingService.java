@@ -83,6 +83,13 @@ public class BookingService {
                 .toList();
     }
 
+    public List<Booking> listActiveUserBookings(String userName) {
+        return bookings.values().stream()
+                .filter(b -> b.getUserName().equalsIgnoreCase(userName))
+                .filter(b -> b.getStatus() == Booking.Status.ACTIVE)
+                .toList();
+    }
+
     private Booking findActiveBooking(String bookingId) {
         Booking booking = bookings.get(bookingId.toUpperCase());
         if (booking == null) {
