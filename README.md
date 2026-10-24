@@ -31,6 +31,49 @@ Este projeto integra um conjunto de tecnologias modernas para criar uma soluçã
 - **Gerenciamento de Credenciais**: As credenciais e tokens são gerenciados de forma segura através de secrets no GitHub e injetados como variáveis de ambiente no Google Cloud Run, não sendo expostos no código-fonte.
 - **Deploy Automatizado com GitHub Actions**: O processo de build da imagem Docker, envio para o Artifact Registry e deploy no Cloud Run é totalmente automatizado.
 
+## Pré-requisitos
+
+- **Java 21** (o `pom.xml` fixa `<java.version>21</java.version>`; o Dockerfile usa `eclipse-temurin-21`)
+- **Maven 3.9+**
+- **Docker** (opcional — só para gerar a imagem)
+- Bot no Telegram, chave do Google AI Studio (Gemini) e conta Mailjet
+
+Variáveis de ambiente lidas pela aplicação:
+
+| Variável | Uso |
+|---|---|
+| `GEMINI_API_KEY` | acesso ao Gemini (`gemini.api-key`) |
+| `TELEGRAM_SECRET_TOKEN` | valida o header do webhook |
+| `MAILJET_API_KEY` / `MAILJET_SECRET_KEY` | envio de e-mail |
+| `GCP_PROJECT_ID` | projeto do Firestore |
+
+## Como rodar localmente
+
+```bash
+export GEMINI_API_KEY=...
+export TELEGRAM_SECRET_TOKEN=...
+export MAILJET_API_KEY=... MAILJET_SECRET_KEY=...
+export GCP_PROJECT_ID=...
+
+mvn spring-boot:run          # sobe na porta 8080
+```
+
+Teste o chat sem passar pelo Telegram:
+
+```bash
+curl -X POST http://localhost:8080/api/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"sessionId":"teste","message":"Quero alugar uma patinete em Fortaleza"}'
+```
+
+Imagem Docker (mesmo caminho usado no deploy):
+
+```bash
+docker build -t aluguel-patinetes .
+```
+
+Testes: `mvn test`.
+
 ## Configuração e Deploy
 
 O deploy da aplicação é automatizado com GitHub Actions.
@@ -73,3 +116,7 @@ Este projeto foi fortemente inspirado e utilizou conhecimentos dos seguintes rec
 ## Referências Oficiais
 
 - **Documentação do LangChain4j**: [https://docs.langchain4j.dev/](https://docs.langchain4j.dev/)
+
+## Licença
+
+MIT — veja [LICENSE](LICENSE).
